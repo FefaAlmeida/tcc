@@ -70,20 +70,21 @@ const conceitos = [
   },
 ];
 
+
 export default function Home() {
   return (
-    <main className="min-h-screen w-full bg-[#F0F4F9] px-5 pb-8 pt-6 lg:px-7">
+    <main className="min-h-screen w-full bg-[radial-gradient(ellipse_at_65%_0%,#E4EAF3_0%,#F0F4F9_55%,#F0F4F9_100%)] px-5 pt-8 pb-12 font-[family-name:var(--font-geist-sans)] sm:px-7 lg:px-9 lg:pt-10">
       <div className="mx-auto w-full max-w-[1500px]">
 
         {/* Apresentação da biblioteca */}
-        <section className="relative mb-5 min-h-[120px] overflow-hidden">
+        <section className="relative mb-7 min-h-[145px] md:min-h-[170px] lg:mb-8 lg:min-h-[180px]">
 
           <div className="relative z-10 pt-2">
-            <h1 className="text-[26px] font-bold leading-tight tracking-[-0.7px] text-[#192344]">
+            <h1 className="text-[32px] font-semibold leading-tight tracking-[-1.2px] text-[#101A40] md:text-[40px]">
               Biblioteca de conceitos
             </h1>
 
-            <div className="mt-2 text-[12px] leading-[17px] text-[#8993A7]">
+            <div className="mt-3 text-[15px] leading-[22px] text-[#7483A3] md:text-[16px] md:leading-[24px]">
               <p>
                 Navegue por todos os conceitos mapeados pela plataforma.
               </p>
@@ -98,31 +99,22 @@ export default function Home() {
           <img
             src="/bibliotecaHero.png"
             alt="Ilustração de livros representando diferentes áreas do conhecimento"
-            className="pointer-events-none absolute right-0 top-[-15px] hidden h-[145px] w-auto object-contain md:block lg:h-[155px]"
+            className="pointer-events-none absolute top-[-25px] right-0 hidden h-[170px] w-auto object-contain md:block lg:h-[200px]"
           />
         </section>
 
         {/* Barra de pesquisa */}
-        <section className="mb-3 w-full max-w-[690px]">
+        <section className="mb-4 w-full max-w-[670px]">
           <BarraBusca />
         </section>
 
         {/* Filtros e ordenação */}
-        <section className="mb-4 w-full">
+        <section className="mb-5 w-full">
           <FiltrosBiblioteca />
         </section>
 
         {/* Catálogo de conceitos */}
-        <section
-          className="
-            grid
-            grid-cols-1
-            items-stretch
-            gap-3
-            sm:grid-cols-2
-            xl:grid-cols-4
-          "
-        >
+        <section className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {conceitos.map((conceito) => (
             <CardConceito
               key={conceito.titulo}
@@ -139,3 +131,4 @@ export default function Home() {
     </main>
   );
 }
+

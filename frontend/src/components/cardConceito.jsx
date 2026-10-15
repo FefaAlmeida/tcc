@@ -58,19 +58,22 @@ function getStatusStyles(status) {
   };
 }
 
+
 export function CardConceito({
   titulo,
   categoria,
   descricao,
   status,
+  progresso = 0,
 }) {
-  const percentual = progresso[titulo] ?? 0;
+  const percentual = Math.min(100, Math.max(0, progresso));
   const estilos = getStatusStyles(status);
 
   return (
-    <Card className="overflow-hidden rounded-lg border border-slate-200 bg-white p-0 shadow-sm">
-      {/* Imagem — mantida no tamanho original */}
-      <div className="relative h-36 w-full overflow-hidden">
+    <Card className="flex h-full flex-col gap-0 overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-0 shadow-sm">
+
+      {/* Imagem do conceito */}
+      <div className="relative h-32 w-full shrink-0 overflow-hidden">
         <img
           src={imagens[titulo]}
           alt={titulo}
@@ -78,53 +81,64 @@ export function CardConceito({
         />
 
         <Badge
-          className={`absolute left-3 top-3 rounded-full border px-2 py-0.5 text-[9px] font-medium shadow-sm ${estilos.badge}`}
+          className={`absolute top-3 left-3 rounded-full border px-3 py-1 text-[11px] font-medium shadow-sm ${estilos.badge}`}
         >
           <span
-            className={`mr-1.5 h-1.5 w-1.5 rounded-full ${estilos.ponto}`}
+            className={`mr-1.5 h-2 w-2 rounded-full ${estilos.ponto}`}
           />
           {status}
         </Badge>
       </div>
 
-      {/* Conteúdo compacto */}
-      <CardContent className="p-3">
-        <h3 className="text-[14px] font-semibold leading-5 text-[#17245c]">
+      {/* Informações do conceito */}
+      <CardContent className="flex flex-1 flex-col p-4">
+
+        <h3 className="text-[18px] leading-6 font-semibold tracking-tight text-[#101A40]">
           {titulo}
         </h3>
 
-        <p className="mt-1 text-[10px] leading-[14px] text-slate-500">
+        <p className="mt-2 text-[14px] leading-[18px] text-[#7483A3]">
           {descricao}
         </p>
 
-        <div className="mt-3">
-          <div className="mb-1 flex items-center justify-between">
-            <span className="text-[9px] text-slate-500">
+        {/* Progresso e última revisão */}
+        <div className="mt-auto pt-5">
+
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[12px] text-[#7483A3]">
               Seu nível de domínio
             </span>
 
-            <span
-              className={`text-[10px] font-semibold ${estilos.porcentagem}`}
-            >
+            <span className="text-[13px] font-semibold text-[#101A40]">
               {percentual}%
             </span>
           </div>
 
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[#E9EDF3]">
             <div
               className={`h-full rounded-full ${estilos.barra}`}
               style={{ width: `${percentual}%` }}
             />
           </div>
-        </div>
 
-        <div className="mt-2.5 flex items-center gap-1.5 text-[9px] text-slate-400">
-          <span className="relative flex h-3 w-3 items-center justify-center rounded-full border border-slate-400">
-            <span className="absolute h-[1px] w-1 bg-slate-400" />
-            <span className="absolute h-1 w-[1px] bg-slate-400" />
-          </span>
+          <div className="mt-4 flex items-center gap-2 border-t border-[#E8ECF2] pt-3 text-[12px] text-[#7483A3]">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="h-4 w-4 shrink-0"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
 
-          <span>Última revisão: há 2 dias</span>
+            <span>Última revisão: há 2 dias</span>
+          </div>
+
         </div>
       </CardContent>
     </Card>

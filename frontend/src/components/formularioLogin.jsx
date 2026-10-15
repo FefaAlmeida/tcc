@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 
+
 export default function FormularioLogin() {
     const [mostrarSenha, setMostrarSenha] = useState(false);
 
@@ -94,13 +95,15 @@ export default function FormularioLogin() {
                                 <path d="M8 10V7a4 4 0 0 1 8 0v3" />
                             </svg>
 
-                            <Input
-                                id="senha"
-                                type={mostrarSenha ? "text" : "password"}
-                                placeholder="Sua senha"
-                                autoComplete="current-password"
-                                className="h-11 rounded-md border-[#D9E1ED] bg-white pr-12 pl-10 text-sm text-[#253452] placeholder:text-[#A7B2C3] focus-visible:ring-[#EEDC84]"
+                            
+                          <Input
+                            id="senha"
+                            type={mostrarSenha ? "text" : "password"}
+                            placeholder="Sua senha"
+                            autoComplete="current-password"
+                            className="h-11 rounded-md border-[#D9E1ED] bg-white pr-12 pl-10 text-sm text-[#253452] placeholder:text-[#A7B2C3] focus-visible:ring-[#EEDC84] [&::-ms-reveal]:hidden [&::-ms-clear]:hidden [&::-webkit-credentials-auto-fill-button]:hidden"
                             />
+
 
                             <button
                                 type="button"

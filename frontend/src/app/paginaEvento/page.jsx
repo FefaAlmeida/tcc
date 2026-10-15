@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
   Bell,
@@ -26,6 +26,115 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
+
+const demoEvent = {
+  id: "demo-geleiras",
+  title: "Estudo aponta aceleração do derretimento das geleiras no mundo",
+  description:
+    "Pesquisa internacional alerta que o derretimento das geleiras está acontecendo mais rápido do que o previsto, com impactos no clima e no aumento do nível do mar.",
+  category: "Meio ambiente",
+  publishedAt: "2026-10-01T12:00:00.000Z",
+  imageUrl:
+    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1400&q=85",
+  saved: false,
+  sources: [
+    { name: "BBC News", url: "https://www.bbc.com/news" },
+    { name: "Reuters", url: "https://www.reuters.com/" },
+    { name: "National Geographic", url: "https://www.nationalgeographic.com/" },
+  ],
+  summary: {
+    paragraphs: [
+      "Um novo estudo internacional mostrou que as geleiras do planeta estão derretendo mais rápido do que o estimado anteriormente. Esse processo é causado principalmente pelo aumento da temperatura global, resultado das emissões de gases de efeito estufa.",
+      "O derretimento das geleiras contribui para o aumento do nível do mar, afeta ecossistemas litorâneos e milhões de pessoas ao redor do mundo. Além disso, influencia o clima global, já que as geleiras ajudam a regular a temperatura do planeta.",
+    ],
+    whyItMatters:
+      "O derretimento das geleiras afeta o clima, a biodiversidade e a vida de milhões de pessoas. Entender esse tema ajuda a compreender melhor os debates sobre mudanças climáticas e suas consequências.",
+  },
+  concepts: [
+    { id: "mudancas-climaticas", title: "Mudanças climáticas", status: "Em revisão", saved: false },
+    { id: "gases-efeito-estufa", title: "Gases de efeito estufa", status: "Lacuna", saved: false },
+    { id: "aquecimento-global", title: "Aquecimento global", status: "Dominado", saved: false },
+    { id: "nivel-do-mar", title: "Nível do mar", status: "Em revisão", saved: false },
+    { id: "calotas-polares", title: "Calotas polares", status: "Lacuna", saved: false },
+  ],
+  timeline: [
+    {
+      id: "2026",
+      year: "2026 · Estudo mais recente",
+      title: "Aceleração do derretimento das geleiras",
+      detail: "Nova pesquisa aponta que o derretimento está mais rápido do que o previsto.",
+      active: true,
+    },
+    {
+      id: "2024",
+      year: "2024",
+      title: "Recorde de perda de gelo na Antártida",
+      detail: "Dados mostram o menor nível de gelo registrado na região.",
+    },
+    {
+      id: "2022",
+      year: "2022",
+      title: "Relatório da ONU sobre mudanças climáticas",
+      detail: "Alerta para o impacto do derretimento das geleiras no nível do mar.",
+    },
+    {
+      id: "2020",
+      year: "2020",
+      title: "Estudo já indicava aceleração",
+      detail: "Pesquisadores apontavam sinais de aumento na taxa de derretimento.",
+    },
+  ],
+};
+
+async function requestApi(path, options = {}) {
+  if (!API_BASE_URL) throw new Error("Configure NEXT_PUBLIC_API_URL para conectar ao backend.");
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    credentials: "include",
+    ...options,
+    headers: {
+      Accept: "application/json",
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `Erro na API (${response.status}).`);
+  }
+
+  return response.status === 204 ? null : response.json();
+}
+
+async function getEvento(eventId) {
+  if (!API_BASE_URL) return { event: demoEvent, demo: true };
+  const payload = await requestApi(`/events/${encodeURIComponent(eventId)}`);
+  return { event: payload?.data ?? payload?.event ?? payload, demo: false };
+}
+
+function setEventoSalvo(eventId, saved) {
+  return requestApi(`/events/${encodeURIComponent(eventId)}/saved`, {
+    method: "PUT",
+    body: JSON.stringify({ saved }),
+  });
+}
+
+function setConceitoSalvo(conceptId, saved) {
+  return requestApi(`/concepts/${encodeURIComponent(conceptId)}/saved`, {
+    method: "PUT",
+    body: JSON.stringify({ saved }),
+  });
+}
+
+function formatarDataEvento(date) {
+  if (!date) return "";
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return String(date);
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(parsedDate);
+}
+
 const navigation = [
   { label: "Início", icon: Home },
   { label: "Explorar", icon: Compass },
@@ -36,48 +145,136 @@ const navigation = [
   { label: "Aprendizado", icon: GraduationCap },
 ];
 
-const concepts = [
-  { title: "Mudanças climáticas", detail: "Em revisão", color: "bg-amber-400" },
-  { title: "Gases de efeito estufa", detail: "Lacuna", color: "bg-rose-400" },
-  { title: "Aquecimento global", detail: "Dominado", color: "bg-emerald-500" },
-  { title: "Nível do mar", detail: "Em revisão", color: "bg-yellow-400" },
-  { title: "Calotas polares", detail: "Lacuna", color: "bg-red-400" },
-];
-
-const timeline = [
-  {
-    year: "2026 · Estudo mais recente",
-    title: "Aceleração do derretimento das geleiras",
-    detail: "Nova pesquisa aponta que o derretimento está mais rápido do que o previsto.",
-    active: true,
-  },
-  {
-    year: "2024",
-    title: "Recorde de perda de gelo na Antártida",
-    detail: "Dados mostram o menor nível de gelo registrado na região.",
-  },
-  {
-    year: "2022",
-    title: "Relatório da ONU sobre mudanças climáticas",
-    detail: "Alerta para o impacto do derretimento das geleiras no nível do mar.",
-  },
-  {
-    year: "2020",
-    title: "Estudo já indicava aceleração",
-    detail: "Pesquisadores apontavam sinais de aumento na taxa de derretimento.",
-  },
+const conceptColors = [
+  "bg-amber-400",
+  "bg-rose-400",
+  "bg-emerald-500",
+  "bg-yellow-400",
+  "bg-red-400",
 ];
 
 export default function PaginaEvento() {
+  const [event, setEvent] = useState(null);
+  const [eventId, setEventId] = useState("demo-geleiras");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [demoMode, setDemoMode] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedConcepts, setSavedConcepts] = useState([]);
+  const [pendingAction, setPendingAction] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
   const [search, setSearch] = useState("");
 
-  function toggleConcept(title) {
-    setSavedConcepts((current) =>
-      current.includes(title)
-        ? current.filter((concept) => concept !== title)
-        : [...current, title],
+  const loadEvent = useCallback(async (id) => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await getEvento(id);
+      setEvent(result.event);
+      setDemoMode(result.demo);
+      setSaved(Boolean(result.event.saved));
+      setSavedConcepts(
+        (result.event.concepts ?? [])
+          .filter((concept) => concept.saved)
+          .map((concept) => concept.id),
+      );
+    } catch (loadError) {
+      setError(loadError.message || "Não foi possível carregar o evento.");
+      setEvent(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("id") || "demo-geleiras";
+    setEventId(id);
+    loadEvent(id);
+  }, [loadEvent]);
+
+  async function toggleSaved() {
+    const nextSaved = !saved;
+    setPendingAction(true);
+    setActionMessage("");
+
+    try {
+      if (!demoMode) await setEventoSalvo(eventId, nextSaved);
+      setSaved(nextSaved);
+      setActionMessage(
+        demoMode
+          ? "Demonstração: alteração válida apenas nesta sessão."
+          : "Evento atualizado.",
+      );
+    } catch (actionError) {
+      setActionMessage(actionError.message || "Não foi possível salvar o evento.");
+    } finally {
+      setPendingAction(false);
+    }
+  }
+
+  async function toggleConcept(concept) {
+    const nextSaved = !savedConcepts.includes(concept.id);
+    setPendingAction(true);
+    setActionMessage("");
+
+    try {
+      if (!demoMode) await setConceitoSalvo(concept.id, nextSaved);
+      setSavedConcepts((current) =>
+        nextSaved
+          ? [...current, concept.id]
+          : current.filter((id) => id !== concept.id),
+      );
+      setActionMessage(
+        demoMode
+          ? "Demonstração: alteração válida apenas nesta sessão."
+          : "Conceito atualizado.",
+      );
+    } catch (actionError) {
+      setActionMessage(actionError.message || "Não foi possível atualizar o conceito.");
+    } finally {
+      setPendingAction(false);
+    }
+  }
+
+  async function shareEvent() {
+    const shareData = {
+      title: event.title,
+      text: event.description,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        setActionMessage("Link do evento copiado.");
+      }
+    } catch (shareError) {
+      if (shareError.name !== "AbortError") {
+        setActionMessage("Não foi possível compartilhar o evento.");
+      }
+    }
+  }
+
+  if (loading) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#f1f3f6] text-[#536071]">
+        <p role="status">Carregando evento…</p>
+      </main>
+    );
+  }
+
+  if (error || !event) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#f1f3f6] px-5 text-center text-[#536071]">
+        <div className="max-w-md rounded-lg border border-[#e4e7eb] bg-white p-6">
+          <h1 className="text-lg font-semibold text-[#263246]">Não foi possível abrir o evento</h1>
+          <p role="alert" className="mt-2 text-sm">{error || "Evento não encontrado."}</p>
+          <Button onClick={() => loadEvent(eventId)} className="mt-4">Tentar novamente</Button>
+        </div>
+      </main>
     );
   }
 
@@ -153,6 +350,14 @@ export default function PaginaEvento() {
         </header>
 
         <div className="mx-auto grid max-w-[1330px] grid-cols-1 gap-5 px-4 py-5 sm:px-5 md:grid-cols-[minmax(0,1.85fr)_minmax(210px,0.95fr)] md:gap-4 lg:px-7 lg:py-6">
+          {(demoMode || actionMessage) && (
+            <div
+              role="status"
+              className="col-span-full rounded-md border border-[#e7dcaa] bg-[#fffbea] px-4 py-2 text-[12px] text-[#756522]"
+            >
+              {actionMessage || "Modo demonstração: configure NEXT_PUBLIC_API_URL para conectar ao backend."}
+            </div>
+          )}
           <section className="min-w-0">
             <div className="mb-3 flex items-center justify-between">
               <a
@@ -166,7 +371,8 @@ export default function PaginaEvento() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSaved((current) => !current)}
+                  onClick={toggleSaved}
+                  disabled={pendingAction}
                   className={`h-9 gap-2 px-3 text-[13px] ${
                     saved ? "text-[#ad8e19]" : "text-[#5e6876]"
                   }`}
@@ -177,6 +383,7 @@ export default function PaginaEvento() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={shareEvent}
                   className="h-9 gap-2 px-3 text-[13px] text-[#5e6876]"
                 >
                   <Share2 size={16} />
@@ -193,50 +400,42 @@ export default function PaginaEvento() {
                   className="absolute inset-0 bg-cover bg-center"
                   style={{
                     backgroundImage:
-                      "linear-gradient(180deg,rgba(18,35,48,.03) 45%,rgba(18,35,48,.48) 100%),url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1400&q=85')",
+                      `linear-gradient(180deg,rgba(18,35,48,.03) 45%,rgba(18,35,48,.48) 100%),url('${event.imageUrl || ""}')`,
                   }}
                 />
                 <div className="absolute bottom-3 left-4 flex items-center gap-1.5 rounded-full bg-[#263c4dcc] px-3 py-1.5 text-[11px] text-white">
                   <Sparkles size={13} />
-                  Meio ambiente
+                  {event.category}
                 </div>
                 <span className="absolute bottom-3 right-4 rounded-full bg-[#263c4dcc] px-3 py-1.5 text-[11px] text-white">
-                  1 de outubro de 2026
+                  {formatarDataEvento(event.publishedAt)}
                 </span>
               </div>
 
               <div className="px-5 pb-5 pt-4 sm:px-6">
                 <h1 className="max-w-[720px] text-[25px] leading-[1.16] font-bold tracking-[-0.04em] text-[#172338] sm:text-[30px]">
-                  Estudo aponta aceleração do derretimento das geleiras no mundo
+                  {event.title}
                 </h1>
                 <p className="mt-2 max-w-[720px] text-[14px] leading-[1.55] text-[#687382]">
-                  Pesquisa internacional alerta que o derretimento das geleiras
-                  está acontecendo mais rápido do que o previsto, com impactos
-                  no clima e no aumento do nível do mar.
+                  {event.description}
                 </p>
 
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-[#75808c]">
                   <span className="mr-0.5">Fontes originais:</span>
-                  {[
-                    ["BBC News", "bg-[#c43a3a]"],
-                    ["Reuters", "bg-[#e79d57]"],
-                    ["National Geographic", "bg-[#e4c840]"],
-                  ].map(([source, color]) => (
+                  {(event.sources ?? []).map((source, index) => (
                     <span
-                      key={source}
+                      key={`${source.name}-${index}`}
                       className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-[#e9ebed] px-2.5 py-1.5"
                     >
-                      <span className={`size-2.5 rounded-[3px] ${color}`} />
-                      {source}
+                      <span className={`size-2.5 rounded-[3px] ${["bg-[#c43a3a]", "bg-[#e79d57]", "bg-[#e4c840]"][index % 3]}`} />
+                      {source.url ? (
+                        <a href={source.url} target="_blank" rel="noreferrer" className="hover:underline">
+                          {source.name}
+                        </a>
+                      ) : source.name}
                       <ChevronRight size={12} />
                     </span>
                   ))}
-                  <button
-                    type="button"
-                    className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-[#e9ebed] px-2.5 py-1.5 hover:bg-[#f7f8f9]"
-                  >
-                    +2 fontes <ChevronDown size={12} />
-                  </button>
                 </div>
               </div>
             </article>
@@ -252,19 +451,11 @@ export default function PaginaEvento() {
                 </span>
               </div>
 
-              <p className="mt-3 text-[14px] leading-[1.65] text-[#697482]">
-                Um novo estudo internacional mostrou que as geleiras do planeta
-                estão derretendo mais rápido do que o estimado anteriormente.
-                Esse processo é causado principalmente pelo aumento da
-                temperatura global, resultado das emissões de gases de efeito
-                estufa.
-              </p>
-              <p className="mt-3 text-[14px] leading-[1.65] text-[#697482]">
-                O derretimento das geleiras contribui para o aumento do nível do
-                mar, afeta ecossistemas litorâneos e milhões de pessoas ao redor
-                do mundo. Além disso, influencia o clima global, já que as
-                geleiras ajudam a regular a temperatura do planeta.
-              </p>
+              {(event.summary?.paragraphs ?? []).map((paragraph, index) => (
+                <p key={index} className="mt-3 text-[14px] leading-[1.65] text-[#697482]">
+                  {paragraph}
+                </p>
+              ))}
 
               <Separator className="my-4 bg-[#edf0f2]" />
 
@@ -277,10 +468,7 @@ export default function PaginaEvento() {
                     Por que isso importa?
                   </h3>
                   <p className="mt-1 text-[13px] leading-[1.55] text-[#7b8490]">
-                    O derretimento das geleiras afeta o clima, a biodiversidade
-                    e a vida de milhões de pessoas. Entender esse tema ajuda a
-                    compreender melhor os debates sobre mudanças climáticas e
-                    suas consequências.
+                    {event.summary?.whyItMatters}
                   </p>
                 </div>
               </div>
@@ -297,27 +485,29 @@ export default function PaginaEvento() {
                 <CircleHelp size={15} className="text-[#a0a8b1]" />
               </div>
               <div className="flex flex-col">
-                {concepts.map(({ title, detail, color }) => {
-                  const isSaved = savedConcepts.includes(title);
+                {(event.concepts ?? []).map((concept, index) => {
+                  const isSaved = savedConcepts.includes(concept.id);
+                  const color = conceptColors[index % conceptColors.length];
 
                   return (
                     <div
-                      key={title}
+                      key={concept.id}
                       className="flex min-h-[48px] items-center gap-2.5 border-b border-[#f0f1f3] last:border-0"
                     >
                       <span className={`size-2 shrink-0 rounded-full ${color}`} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[12px] font-medium text-[#3e4858]">
-                          {title}
+                          {concept.title}
                         </p>
                         <p className="text-[11px] leading-4 text-[#929aa4]">
-                          {detail}
+                          {concept.status}
                         </p>
                       </div>
                       <button
                         type="button"
-                        onClick={() => toggleConcept(title)}
-                        aria-label={`${isSaved ? "Remover" : "Adicionar"} ${title} ${
+                        onClick={() => toggleConcept(concept)}
+                        disabled={pendingAction}
+                        aria-label={`${isSaved ? "Remover" : "Adicionar"} ${concept.title} ${
                           isSaved ? "dos salvos" : "aos salvos"
                         }`}
                         className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-2 text-[10px] transition-colors ${
@@ -331,8 +521,9 @@ export default function PaginaEvento() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => toggleConcept(title)}
-                        aria-label={`Salvar conceito: ${title}`}
+                        onClick={() => toggleConcept(concept)}
+                        disabled={pendingAction}
+                        aria-label={`Salvar conceito: ${concept.title}`}
                         className="grid size-8 shrink-0 place-items-center text-[#a0a8b1] hover:text-[#8d7414]"
                       >
                         {isSaved ? (
@@ -356,7 +547,7 @@ export default function PaginaEvento() {
               </div>
               <div className="relative ml-1.5">
                 <span className="absolute bottom-2 left-[3px] top-2 w-px bg-[#e6e9ec]" />
-                {timeline.map((item) => (
+                {(event.timeline ?? []).map((item) => (
                   <article
                     key={item.year}
                     className="relative flex gap-3 pb-4 last:pb-0"
